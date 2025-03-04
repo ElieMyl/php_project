@@ -3,9 +3,8 @@
 require("require.php");
 $pdo = db_connect();
 
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
+session_start();
+
 
 if (!isset($_SESSION["user_id"])) {
     header("Location: auth/login.php"); 
@@ -14,23 +13,10 @@ if (!isset($_SESSION["user_id"])) {
 
 $user = $_SESSION["user_pseudo"];
 
-// Récupération du solde si l'utilisateur est connecté
-$solde_total = 0;
-if (isset($_SESSION["user_id"])) {
-    $stmt = $pdo->prepare("
-        SELECT COALESCE(SUM(
-            CASE 
-                WHEN id_type_transaction = 1 THEN montant_transaction 
-                WHEN id_type_transaction = 2 THEN -montant_transaction
-                ELSE 0
-            END
-        ), 0) as solde_total
-        FROM transaction 
-        WHERE id_user_transaction = ?
-    ");
-    $stmt->execute([$_SESSION["user_id"]]);
-    $solde_total = $stmt->fetchColumn();
-}
+$solde_total = $pdo->prepare("SELECT user_coins FROM user WHERE id_user = ?");
+$solde_total->execute([$_SESSION["user_id"]]);
+$solde_total = $solde_total->fetch(PDO::FETCH_ASSOC);
+$solde_total = $solde_total["user_coins"];
 
 ?>
 
@@ -55,9 +41,11 @@ if (isset($_SESSION["user_id"])) {
         <a href="index.php" class="brand-logo">Fasael Casino</a>
         <a href="#" data-target="mobile-demo" class="sidenav-trigger"><i class="material-icons">menu</i></a>
         <ul id="nav-mobile" class="right hide-on-med-and-down">
-            <li><a href="game.php"><b>Jeux</b></a></li>
-            <li><a href="slots.php"><b>Machines à sous</b></a></li>
-            <li><a href="account.php"><b>Mon Compte</b></a></li>
+            <li><a href="index.php#jeux"><b>Jeux</b></a></li>
+            <li><a href="index.php#machine"><b>Machines à sous</b></a></li>
+            <?php if ($_SESSION["user_admin"] == 1): ?>
+            <li><a href="../private"><b>Admin</b></a></li>
+            <?php endif; ?>
             <?php if (isset($_SESSION["user_id"])): ?>
             <li><a href="wallet.php" class="btn waves-effect waves-light" id="solde"><b>Solde : <span id="solde-amount"><?php echo number_format($solde_total, 2); ?> €</span></b></a></li>
             <?php endif; ?>
@@ -76,7 +64,7 @@ if (isset($_SESSION["user_id"])) {
     <div class="center-title">
         <h1>Bienvenue sur Fasael Casino <?php echo($user) ?>, bon jeu à toi !</h1>
     </div>
-    <div class="center-title">
+    <div class="center-title" id="jeux">
         <h2>Jeux</h2>
     </div>
     <div class="row">
@@ -111,7 +99,7 @@ if (isset($_SESSION["user_id"])) {
 
     ?>
      </div>
-     <div class="center-title">
+     <div class="center-title" id="machine">
         <h2>Machine à sous</h2>
     </div>
     <div class="row">
@@ -175,48 +163,5 @@ if (isset($_SESSION["user_id"])) {
 </footer>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Initialisation de la sidenav mobile
-    var elems = document.querySelectorAll('.sidenav');
-    var instances = M.Sidenav.init(elems);
-
-    // Fonction pour mettre à jour le solde
-    function updateSolde() {
-        fetch('api/get_solde.php')
-            .then(response => response.json())
-            .then(data => {
-                document.getElementById('solde-amount').textContent = data.solde;
-                document.getElementById('solde-amount-mobile').textContent = data.solde;
-            })
-            .catch(error => console.error('Erreur:', error));
-    }
-
-    // Mise à jour initiale du solde
-    updateSolde();
-
-    // Mise à jour du solde toutes les 5 secondes
-    setInterval(updateSolde, 5000);
-});
-
-// Fonction de mise à jour du solde
-function updateBalance() {
-    fetch('wallet.php?action=get_balance')
-        .then(response => response.json())
-        .then(data => {
-            if (data.solde !== undefined) {
-                const formattedBalance = new Intl.NumberFormat('fr-FR', {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2
-                }).format(data.solde);
-                document.getElementById('solde-nav').textContent = `Solde : ${formattedBalance} €`;
-            }
-        });
-}
-
-// Mise à jour toutes les 30 secondes
-setInterval(updateBalance, 30000);
-</script>
-
 </body>
 </html>

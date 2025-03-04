@@ -1,11 +1,8 @@
 <?php
-
-// Init Database
 require("../require.php");
 $pdo = db_connect();
 
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
-    // Récupérer et nettoyer les données du formulaire
     $prenom = trim($_POST["first_name"]);
     $nom = trim($_POST["last_name"]);
     $pseudo = trim($_POST["pseudo"]);
@@ -13,34 +10,28 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $password = $_POST["password"];
     $birth = trim($_POST["birth"]);
 
-    // Vérification du format de la date (JJ/MM/AAAA)
     if (!preg_match("/^\d{2}\/\d{2}\/\d{4}$/", $birth)) {
         $error = "Format de date invalide. Utilisez JJ/MM/AAAA.";
     } else {
-        // Convertir la date au format YYYY-MM-DD pour la BDD
         list($jour, $mois, $annee) = explode("/", $birth);
         $dateNaissance = DateTime::createFromFormat("d/m/Y", "$jour/$mois/$annee");
 
         if (!$dateNaissance) {
             $error = "Date de naissance invalide.";
         } else {
-            // Vérifier l'âge
             $aujourdhui = new DateTime();
             $age = $aujourdhui->diff($dateNaissance)->y;
 
             if ($age < 18) {
                 $error = "Vous devez avoir au moins 18 ans pour vous inscrire.";
             } else {
-                // Vérifier si l'email est déjà utilisé
                 $stmt = $pdo->prepare("SELECT COUNT(*) FROM user WHERE user_mail = ?");
                 $stmt->execute([$email]);
                 if ($stmt->fetchColumn() > 0) {
                     $error = "Cet email est déjà utilisé.";
                 } else {
-                    // Hachage du mot de passe
                     $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
 
-                    // Insertion en BDD
                     $stmt = $pdo->prepare("INSERT INTO user (user_prenom, user_nom, user_pseudo, user_mail, user_mdp, user_birth) VALUES (?, ?, ?, ?, ?, ?)");
                     if ($stmt->execute([$prenom, $nom, $pseudo, $email, $hashedPassword, $dateNaissance->format("Y-m-d")])) {
                         $success = "Inscription réussie !";
@@ -120,7 +111,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
 <script>
   function formatDate(input) {
-    let value = input.value.replace(/\D/g, ''); // Supprime tout sauf les chiffres
+    let value = input.value.replace(/\D/g, '');
     if (value.length > 2) {
       value = value.slice(0, 2) + '/' + value.slice(2);
     }

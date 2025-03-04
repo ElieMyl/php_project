@@ -7,18 +7,17 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $email = trim($_POST["email"]);
     $password = $_POST["password"];
 
-    // Vérification si l'utilisateur existe
-    $stmt = $pdo->prepare("SELECT id_user, user_prenom, user_nom, user_pseudo, user_mdp FROM user WHERE user_mail = ?");
+    $stmt = $pdo->prepare("SELECT id_user, user_prenom, user_nom, user_pseudo, user_mdp, user_admin FROM user WHERE user_mail = ?");
     $stmt->execute([$email]);
     $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
     if ($user && password_verify($password, $user["user_mdp"])) {
-        // Connexion réussie → Stocker en session
         $_SESSION["user_id"] = $user["id_user"];
         $_SESSION["user_prenom"] = $user["user_prenom"];
         $_SESSION["user_nom"] = $user["user_nom"];
         $_SESSION["user_pseudo"] = $user["user_pseudo"];
-        header("Location: ../index.php"); // Redirection vers la page sécurisée
+        $_SESSION["user_admin"] = $user["user_admin"];
+        header("Location: ../index.php"); 
         exit;
     } else {
         $error = "Email ou mot de passe incorrect.";

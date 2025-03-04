@@ -3,7 +3,6 @@ session_start();
 require("../public/require.php");
 $pdo = db_connect();
 
-// Vérifier si l'utilisateur est connecté et admin
 if (!isset($_SESSION["user_id"])) {
     header("Location: ../public/auth/login.php");
     exit;
@@ -21,7 +20,6 @@ if (!$user || $user["user_admin"] != 1) {
 $errors = [];
 $success = false;
 
-// Traitement du formulaire
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $game_name = trim($_POST["game_name"]);
     $description = trim($_POST["description"]);
@@ -29,19 +27,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $id_categorie = $_POST["id_categorie"];
     $image_name = null;
 
-    // Vérification des champs
     if (empty($game_name) || empty($description) || empty($link) || empty($id_categorie)) {
         $errors[] = "Tous les champs sont requis.";
     }
 
-    // Gestion de l'upload d'image (ne pas l'enregistrer tant que l'insertion en BDD n'est pas validée)
     if (!empty($_FILES["game_image"]["name"])) {
-        $target_dir = "../public/img/"; // Dossier de stockage
+        $target_dir = "../public/img/";
         $image_name = uniqid() . "_" . basename($_FILES["game_image"]["name"]); // Générer un nom unique
         $target_file = $target_dir . $image_name;
         $image_tmp = $_FILES["game_image"]["tmp_name"];
 
-        // Vérifier si c'est bien une image
         $check = getimagesize($image_tmp);
         if ($check === false) {
             $errors[] = "Le fichier n'est pas une image valide.";
@@ -50,16 +45,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $errors[] = "Veuillez ajouter une image pour le jeu.";
     }
 
-    // Insertion en BDD si pas d'erreurs
     if (empty($errors)) {
         try {
             $stmt = $pdo->prepare("INSERT INTO jeux (libelle_jeux, description_jeux, image_jeux, lien_jeux, id_categorie) VALUES (?, ?, ?, ?, ?)");
             $success = $stmt->execute([$game_name, $description, $image_name, $link, $id_categorie]);
 
             if ($success) {
-                // Déplacer l’image seulement après confirmation de l'insertion en BDD
                 if (!move_uploaded_file($image_tmp, $target_file)) {
-                    // Si l'upload échoue après l'insertion en BDD, on supprime l'entrée de la base
                     $pdo->prepare("DELETE FROM jeux WHERE libelle_jeux = ?")->execute([$game_name]);
                     $errors[] = "L'image n'a pas pu être enregistrée. L'ajout du jeu a été annulé.";
                     $success = false;
