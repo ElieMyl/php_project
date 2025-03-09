@@ -13,6 +13,10 @@ if (!isset($_SESSION["user_id"])) {
 
 
 $user = $_SESSION["user_pseudo"];
+$user_id = $_SESSION["user_id"];
+
+$game_id = "1";
+
 
 $solde_total = $pdo->prepare("SELECT user_coins FROM user WHERE id_user = ?");
 $solde_total->execute([$_SESSION["user_id"]]);
@@ -37,7 +41,7 @@ $solde_total = $solde_total["user_coins"];
 
 <nav class="nav-extended red darken-4">
     <div class="nav-wrapper container">
-        <a href="../../index.php" class="brand-logo">Fasael Casino</a>
+        <a href="../index.php" class="brand-logo">Fasael Casino</a>
         <a href="#" data-target="mobile-demo" class="sidenav-trigger"><i class="material-icons">menu</i></a>
         <ul id="nav-mobile" class="right hide-on-med-and-down">
             <li><a href="../index.php#jeux"><b>Jeux</b></a></li>
@@ -45,7 +49,7 @@ $solde_total = $solde_total["user_coins"];
             <?php if ($_SESSION["user_admin"] == 1): ?>
             <li><a href="../../private"><b>Admin</b></a></li>
             <?php endif; ?>
-            <?php if (isset($_SESSION["user_id"])): ?>
+            <?php if ($_SESSION["user_id"]): ?>
             <li><a href="../wallet.php" class="btn waves-effect waves-light" id="solde"><b>Solde : <span id="solde-amount"><?php echo $solde_total; ?> €</span></b></a></li>
             <?php endif; ?>
         </ul>
@@ -63,11 +67,37 @@ $solde_total = $solde_total["user_coins"];
       <div class="bet-section">
         <h2>Placez votre mise</h2>
         <div class="bet-container">
-          <input type="number" id="betAmount" placeholder="Montant de la mise">
+          <input type="number" id="betAmount" placeholder="Montant de la mise" data-user-id="<?php echo $user_id; ?>" data-game-id="<?php echo $game_id; ?>">
           <button id="mise">Miser</button>
         </div>
       </div>
     </div>
+      <div class="history-container">
+          <h2>Historique des parties</h2>
+          <ul class="history-list" id="historyList">
+              <?php
+
+                    $history = $pdo->prepare("SELECT * FROM historique_jeux WHERE id_jeux_historique = ?");
+                    $history->execute([$game_id]);
+
+                    while ($row = $history->fetch(PDO::FETCH_ASSOC)) {
+                        if ($row["id_type_historique"] == "1") {
+                            $color = "#4CAF50";
+                            $result = "Gagné";
+                        } else if ($row["id_type_historique"] == "2") {
+                            $color = "#FF0000";
+                            $result = "Perdu";
+                        } else {
+                            $color = "#808080";
+                            $result = "Égalité";
+                        }
+
+                        echo '<li class="history-box" style="background-color: '.$color.';">'.$result.'</li>';
+
+                    }
+              ?>
+          </ul>
+      </div>
   </div>
 <script src="bj/bj.js"></script>
 </body>

@@ -60,6 +60,41 @@ $solde_user = $solde_user["user_coins"];
         </div>
     </div>
 </div>
+<div class="container">
+    <table>
+        <thead>
+        <tr>
+            <th>Date</th>
+            <th>Montant</th>
+            <th>Type</th>
+        </tr>
+        </thead>
+
+        <tbody>
+        <?php
+
+        $history = $pdo->prepare("SELECT * FROM transaction WHERE id_user_transaction = ?");
+        $history->execute([$_SESSION["user_id"]]);
+
+        while ($transaction = $history->fetch(PDO::FETCH_ASSOC)) {
+            if ($transaction["id_type_transaction"] == 1) {
+                $type = "Dépôt";
+            } else {
+                $type = "Retrait";
+            }
+            echo('
+            <tr>
+                <td>' .$transaction['date_transaction']. '</td>
+                <td>' .$transaction['montant_transaction']. '</td>
+                <td>' .$type. '</td>
+            </tr>
+            ');
+        }
+
+        ?>
+        </tbody>
+    </table>
+</div>
 
 <!-- Modals -->
 <div id="modalDepot" class="modal">

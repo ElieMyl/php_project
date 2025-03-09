@@ -2,6 +2,7 @@
 session_start();
 require("../public/require.php");
 $pdo = db_connect();
+auth_admin();
 
 if (!isset($_SESSION["user_id"])) {
     header("Location: ../public/auth/login.php");

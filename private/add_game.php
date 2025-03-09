@@ -2,11 +2,7 @@
 session_start();
 require("../public/require.php");
 $pdo = db_connect();
-
-if (!isset($_SESSION["user_id"])) {
-    header("Location: ../public/auth/login.php");
-    exit;
-}
+auth_admin();
 
 $stmt = $pdo->prepare("SELECT user_admin FROM user WHERE id_user = ?");
 $stmt->execute([$_SESSION["user_id"]]);

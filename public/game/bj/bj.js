@@ -6,6 +6,10 @@ document.getElementById("mise").addEventListener("click", function() {
     let solde = document.getElementById("solde-amount").textContent;
     solde = parseFloat(solde);
 
+    let userID = document.getElementById("betAmount").dataset.userId
+    let gameID = document.getElementById("betAmount").dataset.gameId
+
+
     if (mise > solde){
         alert('Solde insuffisant');
     } else {
@@ -14,7 +18,11 @@ document.getElementById("mise").addEventListener("click", function() {
 
             url: 'ajaxGame.php',
             method: 'POST',
-            data: 'mise=' + mise,
+            data: {
+                mise: mise,
+                userId: userID,
+                gameId: gameID
+            },
             success: function(data){
 
                 if(data == 'Gagné'){

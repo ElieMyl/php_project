@@ -11,11 +11,15 @@ if (!isset($_SESSION["user_id"])) {
 }
 
 $user_id = $_SESSION["user_id"];
-$solde = isset($_POST["solde_actuel"]) ? htmlspecialchars($_POST["solde_actuel"]) : null;
+$date = date('d-m-Y');
+$montant = $_POST["montant"];
+$type = 1;
 
-if (!is_numeric($solde) || $solde < 0) {
+if (!is_numeric($_POST["solde_actuel"]) || $_POST["solde_actuel"] < 0) {
     echo "Erreur : Montant invalide.";
     exit;
+} else {
+    $solde = $_POST["solde_actuel"];
 }
 
 try {
@@ -24,6 +28,8 @@ try {
 
     if ($changeSolde->rowCount() > 0) {
         echo "ok";
+        $transaction = $pdo->prepare("INSERT INTO transaction (montant_transaction, date_transaction, id_user_transaction, id_type_transaction) VALUES(?,?,?,?)");
+        $transaction->execute([$montant, $date, $user_id, $type]);
     } else {
         echo "Erreur : Aucun changement détecté.";
     }

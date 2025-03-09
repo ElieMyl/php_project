@@ -27,7 +27,10 @@ document.addEventListener("DOMContentLoaded", function() {
 
             url: '../public/ajaxWallet/depot.php',
             method: 'POST',
-            data: 'solde_actuel=' + soldeActuel,
+            data: {
+                solde_actuel: soldeActuel,
+                montant: montant
+            },
             success: function(data){
 
                 if(data == 'ok'){
@@ -72,7 +75,10 @@ document.addEventListener("DOMContentLoaded", function() {
 
                 url: '../public/ajaxWallet/retrait.php',
                 method: 'POST',
-                data: 'solde_actuel=' + soldeActuel,
+                data: {
+                    solde_actuel: soldeActuel,
+                    montant: montant
+                },
                 success: function(data){
     
                     if(data == 'ok'){
